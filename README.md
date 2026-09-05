@@ -1,6 +1,6 @@
 # Piper examples
 
-Self-contained migration examples for [piper-go](../piper-go). Each folder covers one source→target direction: start Docker for those two databases only, seed a small `shop` schema, then run `inspect` → `plan` → `execute` from that directory.
+Self-contained migration examples for [piper-go](https://github.com/PiperKitOrg/piper-go). Each folder covers one source→target direction: start Docker for those two databases only, seed a small `shop` schema, then run `inspect` → `plan` → `execute` from that directory.
 
 ## Prerequisites
 
