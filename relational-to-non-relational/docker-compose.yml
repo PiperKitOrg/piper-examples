@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: shop_source
+      POSTGRES_USER: piper
+      POSTGRES_PASSWORD: piper
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U piper -d shop_source"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: piper
+      MONGO_INITDB_ROOT_PASSWORD: piper
+      MONGO_INITDB_DATABASE: shop_target
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15

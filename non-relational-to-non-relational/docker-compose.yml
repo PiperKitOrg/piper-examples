@@ -1,0 +1,28 @@
+services:
+  mongo-source:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: piper
+      MONGO_INITDB_ROOT_PASSWORD: piper
+      MONGO_INITDB_DATABASE: shop_source
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  mongo-target:
+    image: mongo:7
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: piper
+      MONGO_INITDB_ROOT_PASSWORD: piper
+      MONGO_INITDB_DATABASE: shop_target
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
