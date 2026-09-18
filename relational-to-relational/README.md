@@ -20,7 +20,8 @@ docker compose ps   # both services should be healthy
 ## 2. Seed the source
 
 ```bash
-docker compose exec -T postgres psql -U piper -d shop_source < seed/source.sql
+# postgres: docker compose exec -T postgres psql -U piper -d shop_source < seed/source.sql
+# mysql: docker compose exec -T mysql mysql -upiper -ppiper shop_target < seed/seed-mysql.sql
 ```
 
 ## 3. Configure credentials
@@ -41,11 +42,22 @@ From this directory:
 
 Equivalent manual steps:
 
+personal note: `../../piper-go/piper` ignore this, this is just for me.
+
 ```bash
 set -a && source .env && set +a
 piper inspect
 piper plan --target mysql --cycle-mode defer_constraints
 piper execute
+```
+
+For mysql to postgres:  
+
+```bash
+set -a && source .env && set +a
+piper inspect
+piper plan --target postgres --cycle-mode defer_constraints
+piper execute  
 ```
 
 `run.sh` uses `--cycle-mode defer_constraints` because the seed includes a circular FK between `users` and `teams`. Default `strict` planning rejects that cycle.
@@ -71,3 +83,4 @@ You should see `teams`, `users`, `products`, and `orders`, with 2 users and 2 or
 ```bash
 docker compose down -v
 ```
+
