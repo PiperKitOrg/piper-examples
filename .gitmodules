@@ -1,0 +1,6 @@
+[submodule "datasets/pagila"]
+	path = datasets/pagila
+	url = https://github.com/devrimgunduz/pagila.git
+[submodule "datasets/test_db"]
+	path = datasets/test_db
+	url = https://github.com/datacharmer/test_db.git

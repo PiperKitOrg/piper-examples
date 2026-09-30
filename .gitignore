@@ -1,2 +1,4 @@
 .env
-.piper
+.piper/
+runs/**
+!runs/.gitkeep
