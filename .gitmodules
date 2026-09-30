@@ -4,3 +4,6 @@
 [submodule "datasets/test_db"]
 	path = datasets/test_db
 	url = https://github.com/datacharmer/test_db.git
+[submodule "datasets/mongodb-sample-dataset"]
+	path = datasets/mongodb-sample-dataset
+	url = https://github.com/neelabalan/mongodb-sample-dataset.git
