@@ -10,8 +10,10 @@ services:
       POSTGRES_PASSWORD: piper
       POSTGRES_DB: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # PG 18+ images expect the volume at /var/lib/postgresql (not .../data).
+      - postgres_data:/var/lib/postgresql
       - ./datasets/pagila:/datasets/pagila:ro
+      - ./datasets/e2e-fixtures:/datasets/e2e-fixtures:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
       interval: 5s
@@ -30,6 +32,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./datasets/test_db:/datasets/test_db:ro
+      - ./datasets/e2e-fixtures:/datasets/e2e-fixtures:ro
       - ./playground/mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
@@ -48,6 +51,7 @@ services:
     volumes:
       - mongo_data:/data/db
       - ./datasets/mongodb-sample-dataset:/datasets/mongodb-sample-dataset:ro
+      - ./datasets/e2e-fixtures:/datasets/e2e-fixtures:ro
       - ./playground/import-sample.js:/datasets/import-sample.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--username", "piper", "--password", "piper", "--authenticationDatabase", "admin", "--eval", "db.adminCommand({ ping: 1 })"]

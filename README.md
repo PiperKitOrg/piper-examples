@@ -90,6 +90,20 @@ Each load drops that source and loads it fresh. Your other sources and all targe
 
 Artifacts and the generated `.env` for each cell live in `runs/<dataset>-to-<target>/`.
 
+## Or load an e2e fixture and migrate by hand
+
+The playground also ships the Piper e2e fixture pack under `datasets/e2e-fixtures/` (kitchen-sink types, unicode, partitions, cycles, Mongo edges, etc.).
+
+```bash
+./playground/fixture.sh list
+./playground/fixture.sh load production_weird
+./playground/fixture.sh commands production_weird mysql
+```
+
+`load` creates a source database named after the fixture id (e.g. `production_weird`) on that fixture's engine. `commands` writes `runs/fixture-<id>-to-<target>/.env` and prints the `inspect` / `plan` / `execute` lines to copy.
+
+Same-dialect targets are rejected here too. Some Postgres fixtures (for example `pgnimbus_types`) need extra extensions; if load fails, read the error and install what's missing on the playground Postgres image.
+
 ## Prefer to type the commands yourself?
 
 Great way to learn! `commands.sh` writes the cell's `.env` and prints the commands. It doesn't run Piper, so you stay in control.
@@ -221,7 +235,8 @@ bin/piper                         the binary you copy in
 datasets/test_db                  employees dump
 datasets/pagila                   pagila dump
 datasets/mongodb-sample-dataset   MongoDB sample JSON
-playground/                       up, down, load, clear, run, commands, check, matrix
+datasets/e2e-fixtures             Piper e2e fixture pack + catalog.json
+playground/                       up, down, load, clear, run, commands, fixture, check, matrix
 runs/                             one directory per cell
 docker-compose.yml                PostgreSQL 18 + pgvector, MySQL 8.4, MongoDB 7
 ```

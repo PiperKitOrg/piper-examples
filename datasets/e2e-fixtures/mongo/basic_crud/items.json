@@ -1,0 +1,5 @@
+[
+  {"_id": 1, "name": "alpha", "note": null, "qty": 3, "price": 10.5, "active": true, "created_at": {"$date": "2024-01-01T00:00:00.000Z"}},
+  {"_id": 2, "name": "beta", "note": "unicode café", "qty": 0, "price": 0.01, "active": false, "created_at": {"$date": "2024-06-15T12:30:00.000Z"}},
+  {"_id": 3, "name": "gamma", "note": "line1", "qty": 100, "price": 9999.99, "active": true, "created_at": {"$date": "2025-01-01T08:00:00.000Z"}}
+]

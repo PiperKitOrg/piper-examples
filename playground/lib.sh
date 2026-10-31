@@ -218,22 +218,23 @@ ensure_stack() {
   grant_mysql_app_user
 }
 
-psql_maintenance() {
-  compose exec -T postgres psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_MAINTENANCE_DB" -v dbname="$1" -c "$2"
+# Identifiers passed here are playground-controlled (dataset/fixture names).
+psql_maintenance_sql() {
+  compose exec -T postgres psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_MAINTENANCE_DB" -c "$1"
 }
 
 terminate_postgres_database() {
-  psql_maintenance "$1" "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();"
+  psql_maintenance_sql "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$1' AND pid <> pg_backend_pid();"
 }
 
 drop_postgres_database() {
   terminate_postgres_database "$1"
-  psql_maintenance "$1" 'DROP DATABASE IF EXISTS :"dbname";'
+  psql_maintenance_sql "DROP DATABASE IF EXISTS \"$1\";"
 }
 
 recreate_postgres_database() {
   drop_postgres_database "$1"
-  psql_maintenance "$1" 'CREATE DATABASE :"dbname";'
+  psql_maintenance_sql "CREATE DATABASE \"$1\";"
 }
 
 drop_mysql_database() {

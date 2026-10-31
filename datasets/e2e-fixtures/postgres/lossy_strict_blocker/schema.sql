@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS wide_numbers CASCADE;
+
+CREATE TABLE wide_numbers (
+  id INTEGER PRIMARY KEY,
+  huge NUMERIC(50, 10) NOT NULL,
+  tags TEXT[] NOT NULL
+);
+
+INSERT INTO wide_numbers (id, huge, tags) VALUES
+  (1, 123456789012345678901234567890.1234567890, ARRAY['a','b']);
