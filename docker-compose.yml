@@ -7,7 +7,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: piper
+      POSTGRES_PASSWORD: playground
       POSTGRES_DB: postgres
     volumes:
       # PG 18+ images expect the volume at /var/lib/postgresql (not .../data).
@@ -27,8 +27,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: playground
-      MYSQL_USER: piper
-      MYSQL_PASSWORD: piper
+      MYSQL_USER: playground
+      MYSQL_PASSWORD: playground
     volumes:
       - mysql_data:/var/lib/mysql
       - ./datasets/test_db:/datasets/test_db:ro
@@ -46,15 +46,15 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: piper
-      MONGO_INITDB_ROOT_PASSWORD: piper
+      MONGO_INITDB_ROOT_USERNAME: playground
+      MONGO_INITDB_ROOT_PASSWORD: playground
     volumes:
       - mongo_data:/data/db
       - ./datasets/mongodb-sample-dataset:/datasets/mongodb-sample-dataset:ro
       - ./datasets/e2e-fixtures:/datasets/e2e-fixtures:ro
       - ./playground/import-sample.js:/datasets/import-sample.js:ro
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--username", "piper", "--password", "piper", "--authenticationDatabase", "admin", "--eval", "db.adminCommand({ ping: 1 })"]
+      test: ["CMD", "mongosh", "--quiet", "--username", "playground", "--password", "playground", "--authenticationDatabase", "admin", "--eval", "db.adminCommand({ ping: 1 })"]
       interval: 5s
       timeout: 5s
       retries: 20

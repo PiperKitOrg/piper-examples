@@ -50,10 +50,10 @@ The local passwords are:
 
 | Engine | User | Password |
 | --- | --- | --- |
-| PostgreSQL | `postgres` | `piper` |
-| MySQL app user | `piper` | `piper` |
+| PostgreSQL | `postgres` | `playground` |
+| MySQL app user | `playground` | `playground` |
 | MySQL root | `root` | `root` |
-| MongoDB | `piper` | `piper` |
+| MongoDB | `playground` | `playground` |
 
 A quick note on PostgreSQL: we use the `pgvector/pgvector:pg18` image because Pagila's `film_embedding.embedding` column is `vector(20)`.
 
@@ -130,8 +130,8 @@ cd ../..
 The `.env` in that directory looks like this:
 
 ```bash
-PIPER_SOURCE_URL=mysql://piper:piper@127.0.0.1:3306/employees?sslmode=disable
-PIPER_TARGET_URL=postgres://postgres:piper@127.0.0.1:5432/employees?sslmode=disable
+PIPER_SOURCE_URL=mysql://playground:playground@127.0.0.1:3306/employees?sslmode=disable
+PIPER_TARGET_URL=postgres://postgres:playground@127.0.0.1:5432/employees?sslmode=disable
 ```
 
 A couple of small differences to know about: Pagila's plan line adds `--cycle-mode defer_constraints`, and a sample cell's inspect line is `inspect --sample-full`.

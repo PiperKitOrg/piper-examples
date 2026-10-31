@@ -1,0 +1,3 @@
+CREATE USER IF NOT EXISTS 'playground'@'%' IDENTIFIED BY 'playground';
+GRANT ALL PRIVILEGES ON *.* TO 'playground'@'%';
+FLUSH PRIVILEGES;

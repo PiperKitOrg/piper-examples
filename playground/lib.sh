@@ -11,12 +11,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 PLAYGROUND_HOST=127.0.0.1
 PG_USER=postgres
-PG_PASSWORD=piper
+PG_PASSWORD=playground
 PG_PORT=5432
 PG_MAINTENANCE_DB=postgres
 MYSQL_ROOT_PASSWORD=root
-APP_USER=piper
-APP_PASSWORD=piper
+APP_USER=playground
+APP_PASSWORD=playground
 MYSQL_PORT=3306
 MONGO_PORT=27017
 MONGO_AUTH_DB=admin
