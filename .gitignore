@@ -2,3 +2,5 @@
 .piper/
 runs/**
 !runs/.gitkeep
+bin/piper
+bin/piper.exe

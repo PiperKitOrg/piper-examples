@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 usage() {
-  printf 'Usage: ./playground/check.sh <employees|pagila> <mysql|postgres|mongo>\n' >&2
+  printf 'Usage: ./playground/check.sh <employees|pagila|sample> <mysql|postgres|mongo>\n' >&2
 }
 
 check_table() {
@@ -20,8 +20,7 @@ check_table() {
 
 main() {
   [[ $# -eq 2 ]] || { usage; return 1; }
-  require_dataset "$1"
-  require_target "$2"
+  require_cross_dialect "$1" "$2"
   local database failed=0 table want
   database="$(target_database "$1" "$2")"
   while read -r table want; do

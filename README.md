@@ -1,34 +1,52 @@
 # Piper playground
 
-One local stack, two datasets, six copies. Employees comes from `test_db` and is loaded into MySQL. Pagila is loaded into PostgreSQL. Each dataset is then copied to MySQL, PostgreSQL, and MongoDB.
+Welcome! This is a small local stack where you can try Piper on three real datasets. Employees loads into MySQL, Pagila into PostgreSQL, and the MongoDB sample databases into MongoDB. Piper migrates **across engines only** — six combinations (same-dialect pairs are unsupported).
 
-`run.sh` is one cell. It clears that cell's target, deletes that cell's `.piper` directory, and runs `inspect`, `plan`, and `execute`. The source stays loaded. `matrix.sh` runs all six cells.
+Here's how the scripts fit together:
 
-## Matrix
+- `run.sh` runs one combination (we call it a "cell"). It clears that cell's target, deletes its `.piper` directory, then runs `inspect`, `plan`, and `execute` for you.
+- `commands.sh` prints those same commands so you can type them yourself and see what's happening.
+- `matrix.sh` runs all six supported cells in one go.
 
-| Dataset | Source | Targets | Plan |
+## The matrix
+
+| Dataset | Source | Supported targets | Plan |
 | --- | --- | --- | --- |
-| `employees` | MySQL database `employees` | `mysql`, `postgres`, `mongo` | default cycle mode |
-| `pagila` | PostgreSQL database `pagila` | `mysql`, `postgres`, `mongo` | `--cycle-mode defer_constraints` |
+| `employees` | MySQL database `employees` | `postgres`, `mongo` | default cycle mode |
+| `pagila` | PostgreSQL database `pagila` | `mysql`, `mongo` | `--cycle-mode defer_constraints` |
+| `sample` | MongoDB database `sample_mflix` | `mysql`, `postgres` | `inspect --sample-full` |
 
-Same-engine copies use a second database, so clearing the target leaves the source in place:
+`load.sh sample` imports every sample database: `sample_airbnb`, `sample_analytics`, `sample_geospatial`, `sample_mflix`, `sample_supplies`, `sample_training`, and `sample_weatherdata`. The scripted cell copies `sample_mflix`. If you'd like to try one of the others, use `commands.sh` and run it by hand.
+
+The target database name matches the source dataset name on the other engine:
 
 | Cell | Target database |
 | --- | --- |
-| employees → mysql | `employees_target` |
 | employees → postgres | `employees` |
 | employees → mongo | `employees` |
 | pagila → mysql | `pagila` |
-| pagila → postgres | `pagila_target` |
 | pagila → mongo | `pagila` |
+| sample → mysql | `sample_mflix` |
+| sample → postgres | `sample_mflix` |
 
-## What you need
+Same-engine cells (`employees → mysql`, `pagila → postgres`, `sample → mongo`) are rejected by the scripts and by Piper.
 
-Docker Compose v2, and a `piper` binary. The scripts use `$PIPER_BIN` when it is set, then `../piper-go/piper`, then `piper` on `PATH`.
+## Before you start
 
-Ports: PostgreSQL `5432`, MySQL `3306`, MongoDB `27017`.
+You only need two things: Docker Compose v2 and the `piper` binary. Nothing else has to be installed.
 
-Local passwords:
+Drop the binary into `bin/` and make it executable:
+
+```bash
+cp /path/to/piper bin/piper
+chmod +x bin/piper
+```
+
+The scripts look for `bin/piper` first. If it isn't there, they try `../piper-go/piper`, then `piper` on your `PATH`.
+
+Make sure these ports are free: PostgreSQL `5432`, MySQL `3306`, MongoDB `27017`.
+
+The local passwords are:
 
 | Engine | User | Password |
 | --- | --- | --- |
@@ -37,9 +55,9 @@ Local passwords:
 | MySQL root | `root` | `root` |
 | MongoDB | `piper` | `piper` |
 
-PostgreSQL is the `pgvector/pgvector:pg18` image because Pagila's `film_embedding.embedding` column is `vector(20)`.
+A quick note on PostgreSQL: we use the `pgvector/pgvector:pg18` image because Pagila's `film_embedding.embedding` column is `vector(20)`.
 
-## Start
+## 1. Start the stack
 
 From this directory:
 
@@ -47,58 +65,105 @@ From this directory:
 ./playground/up.sh
 ```
 
-## Load a source
+## 2. Load a source
 
-Employees runs `datasets/test_db/employees.sql` (about 3,919,015 table rows). Pagila runs `pagila-schema.sql`, then `pagila-data.sql`.
+Pick one, or load all three:
 
 ```bash
 ./playground/load.sh employees
 ./playground/load.sh pagila
+./playground/load.sh sample
 ```
 
-Each load drops that source database and loads it again. The other source, and every target, stay as they are.
+Each load drops that source and loads it fresh. Your other sources and all targets are left as they are. Heads up: employees is about 3,919,015 table rows, so give it a moment. The sample import reads the JSON files under `datasets/mongodb-sample-dataset`.
 
-## Run one cell
+## 3. Run one cell
 
 ```bash
-./playground/run.sh employees mysql
 ./playground/run.sh employees postgres
 ./playground/run.sh employees mongo
 ./playground/run.sh pagila mysql
-./playground/run.sh pagila postgres
 ./playground/run.sh pagila mongo
+./playground/run.sh sample mysql
+./playground/run.sh sample postgres
 ```
 
-Artifacts and the generated `.env` for a cell live in `runs/<dataset>-to-<target>/`.
+Artifacts and the generated `.env` for each cell live in `runs/<dataset>-to-<target>/`.
 
-Employees → each target is the long copy. Pagila is the smaller one.
+## Prefer to type the commands yourself?
+
+Great way to learn! `commands.sh` writes the cell's `.env` and prints the commands. It doesn't run Piper, so you stay in control.
+
+```bash
+./playground/commands.sh employees postgres
+```
+
+From the piper-example directory, that prints:
+
+```bash
+./playground/clear.sh target employees postgres
+cd runs/employees-to-postgres
+rm -rf .piper
+set -a
+source .env
+set +a
+../../bin/piper inspect
+../../bin/piper plan --target postgres
+../../bin/piper --yes execute
+cd ../..
+```
+
+The `.env` in that directory looks like this:
+
+```bash
+PIPER_SOURCE_URL=mysql://piper:piper@127.0.0.1:3306/employees?sslmode=disable
+PIPER_TARGET_URL=postgres://postgres:piper@127.0.0.1:5432/employees?sslmode=disable
+```
+
+A couple of small differences to know about: Pagila's plan line adds `--cycle-mode defer_constraints`, and a sample cell's inspect line is `inspect --sample-full`.
+
+Want to try a different sample database?
+
+```bash
+./playground/commands.sh sample mysql sample_analytics
+```
+
+That cell is `runs/sample_analytics-to-mysql`, and its target database is `sample_analytics`.
 
 ## Run every cell
+
+Feeling ambitious? Load all three sources first, then:
 
 ```bash
 ./playground/matrix.sh
 ```
 
-Load both sources first. The matrix runs the six commands above, in that order.
+It runs the six `run.sh` commands above, in that order. As a reminder, `run.sh sample` copies `sample_mflix`, not the other sample databases.
 
 ## Clear a target
 
-Use this when you want that target empty and you are not about to call `run.sh`. `run.sh` already clears the target it is about to fill.
+Use this when you want a target empty and you're not about to call `run.sh` (which already clears the target it's about to fill).
 
 ```bash
-./playground/clear.sh target employees mysql
 ./playground/clear.sh target employees postgres
 ./playground/clear.sh target employees mongo
 ./playground/clear.sh target pagila mysql
-./playground/clear.sh target pagila postgres
 ./playground/clear.sh target pagila mongo
+./playground/clear.sh target sample mysql
+./playground/clear.sh target sample postgres
 ```
 
-MySQL and PostgreSQL targets are dropped and created empty. A MongoDB target is dropped.
+For a different sample database:
+
+```bash
+./playground/clear.sh target sample postgres sample_analytics
+```
+
+MySQL and PostgreSQL targets are dropped and recreated empty. A MongoDB target is simply dropped.
 
 ## Clear a source
 
-Use this when you want the loaded dataset gone. Load it again before the next `run.sh`.
+Want a dataset gone? Clear it, and load it again before your next `run.sh`.
 
 ```bash
 ./playground/clear.sh source employees
@@ -106,9 +171,16 @@ Use this when you want the loaded dataset gone. Load it again before the next `r
 
 ./playground/clear.sh source pagila
 ./playground/load.sh pagila
+
+./playground/clear.sh source sample
+./playground/load.sh sample
 ```
 
-## Counts a passing cell checks
+Clearing `sample` drops all seven sample databases.
+
+## How do I know it worked?
+
+A passing cell checks these row counts:
 
 | Dataset | Table | Rows |
 | --- | --- | --- |
@@ -121,28 +193,35 @@ Use this when you want the loaded dataset gone. Load it again before the next `r
 | pagila | `film` | 1,000 |
 | pagila | `rental` | 51,805 |
 | pagila | `payment` | 51,061 |
+| sample | `comments` | 50,304 |
+| sample | `movies` | 23,539 |
+| sample | `sessions` | 1 |
+| sample | `theaters` | 1,564 |
+| sample | `users` | 185 |
 
-Check a target that already finished:
+You can run the check yourself any time:
 
 ```bash
 ./playground/check.sh employees postgres
-./playground/check.sh pagila mysql
+./playground/check.sh sample mysql
 ```
 
-## Stop
+## All done? Shut it down
 
 ```bash
 ./playground/down.sh
 ```
 
-That removes the Docker volumes. The next `up` starts empty servers. Load both sources again.
+This removes the Docker volumes, so the next `up` starts with empty servers. You'll need to load your sources again.
 
-## Layout
+## What's where
 
 ```text
-datasets/test_db    employees dump, moved here with its own git history
-datasets/pagila     pagila dump, moved here with its own git history
-playground/         up, down, load, clear, run, check, matrix
-runs/               one directory per cell
-docker-compose.yml  PostgreSQL 18 + pgvector, MySQL 8.4, MongoDB 7
+bin/piper                         the binary you copy in
+datasets/test_db                  employees dump
+datasets/pagila                   pagila dump
+datasets/mongodb-sample-dataset   MongoDB sample JSON
+playground/                       up, down, load, clear, run, commands, check, matrix
+runs/                             one directory per cell
+docker-compose.yml                PostgreSQL 18 + pgvector, MySQL 8.4, MongoDB 7
 ```

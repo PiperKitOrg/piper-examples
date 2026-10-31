@@ -8,13 +8,14 @@ run_pair() {
 
 main() {
   ensure_stack
-  run_pair "$EMPLOYEES_DATASET" "$MYSQL_TARGET"
+  # Six supported cross-dialect cells only (same-engine pairs are rejected by Piper).
   run_pair "$EMPLOYEES_DATASET" "$POSTGRES_TARGET"
   run_pair "$EMPLOYEES_DATASET" "$MONGO_TARGET"
   run_pair "$PAGILA_DATASET" "$MYSQL_TARGET"
-  run_pair "$PAGILA_DATASET" "$POSTGRES_TARGET"
   run_pair "$PAGILA_DATASET" "$MONGO_TARGET"
-  printf 'All six cells passed.\n'
+  run_pair "$SAMPLE_DATASET" "$MYSQL_TARGET"
+  run_pair "$SAMPLE_DATASET" "$POSTGRES_TARGET"
+  printf 'All six cross-dialect cells passed.\n'
 }
 
 main "$@"

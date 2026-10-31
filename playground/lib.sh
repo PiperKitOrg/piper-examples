@@ -23,14 +23,13 @@ MONGO_AUTH_DB=admin
 
 EMPLOYEES_DATASET=employees
 PAGILA_DATASET=pagila
+SAMPLE_DATASET=sample
 MYSQL_TARGET=mysql
 POSTGRES_TARGET=postgres
 MONGO_TARGET=mongo
 
 EMPLOYEES_SOURCE_DB=employees
-EMPLOYEES_MYSQL_TARGET_DB=employees_target
 PAGILA_SOURCE_DB=pagila
-PAGILA_POSTGRES_TARGET_DB=pagila_target
 PAGILA_CYCLE_MODE=defer_constraints
 
 EMPLOYEES_DEPARTMENTS_ROWS=9
@@ -42,8 +41,14 @@ EMPLOYEES_SALARIES_ROWS=2844047
 PAGILA_FILM_ROWS=1000
 PAGILA_RENTAL_ROWS=51805
 PAGILA_PAYMENT_ROWS=51061
+SAMPLE_SOURCE_DB=sample_mflix
+SAMPLE_COMMENTS_ROWS=50304
+SAMPLE_MOVIES_ROWS=23539
+SAMPLE_SESSIONS_ROWS=1
+SAMPLE_THEATERS_ROWS=1564
+SAMPLE_USERS_ROWS=185
 
-DATASETS=("$EMPLOYEES_DATASET" "$PAGILA_DATASET")
+DATASETS=("$EMPLOYEES_DATASET" "$PAGILA_DATASET" "$SAMPLE_DATASET")
 TARGETS=("$MYSQL_TARGET" "$POSTGRES_TARGET" "$MONGO_TARGET")
 
 compose() {
@@ -52,9 +57,9 @@ compose() {
 
 require_dataset() {
   case "$1" in
-    "$EMPLOYEES_DATASET"|"$PAGILA_DATASET") return 0 ;;
+    "$EMPLOYEES_DATASET"|"$PAGILA_DATASET"|"$SAMPLE_DATASET") return 0 ;;
   esac
-  printf 'Dataset must be %s or %s.\n' "$EMPLOYEES_DATASET" "$PAGILA_DATASET" >&2
+  printf 'Dataset must be %s, %s, or %s.\n' "$EMPLOYEES_DATASET" "$PAGILA_DATASET" "$SAMPLE_DATASET" >&2
   return 1
 }
 
@@ -66,10 +71,24 @@ require_target() {
   return 1
 }
 
+# Piper rejects same-dialect migrations (six cross-engine directions only).
+require_cross_dialect() {
+  require_dataset "$1"
+  require_target "$2"
+  local source
+  source="$(source_engine "$1")"
+  if [[ "$source" == "$2" ]]; then
+    printf 'Same-dialect migrations are unsupported (%s source -> %s).\n' "$source" "$2" >&2
+    printf 'Use a different engine target. Supported playground cells are listed in README.md.\n' >&2
+    return 1
+  fi
+}
+
 source_engine() {
   case "$1" in
     "$EMPLOYEES_DATASET") printf '%s\n' "$MYSQL_TARGET" ;;
     "$PAGILA_DATASET") printf '%s\n' "$POSTGRES_TARGET" ;;
+    "$SAMPLE_DATASET") printf '%s\n' "$MONGO_TARGET" ;;
     *) return 1 ;;
   esac
 }
@@ -78,28 +97,65 @@ source_database() {
   case "$1" in
     "$EMPLOYEES_DATASET") printf '%s\n' "$EMPLOYEES_SOURCE_DB" ;;
     "$PAGILA_DATASET") printf '%s\n' "$PAGILA_SOURCE_DB" ;;
+    "$SAMPLE_DATASET") printf '%s\n' "$SAMPLE_SOURCE_DB" ;;
     *) return 1 ;;
   esac
 }
 
+sample_databases() {
+  printf '%s\n' \
+    sample_airbnb \
+    sample_analytics \
+    sample_geospatial \
+    sample_mflix \
+    sample_supplies \
+    sample_training \
+    sample_weatherdata
+}
+
+require_sample_database() {
+  local name
+  while read -r name; do
+    [[ "$name" == "$1" ]] && return 0
+  done < <(sample_databases)
+  printf 'Sample database must be one of:\n' >&2
+  sample_databases >&2
+  return 1
+}
+
+# Target DB name matches the source dataset name on the other engine.
+# Same-dialect *_target names are gone — those pairs are unsupported.
+resolved_target_database() {
+  printf '%s\n' "$2"
+}
+
 target_database() {
-  case "$1:$2" in
-    "$EMPLOYEES_DATASET:$MYSQL_TARGET") printf '%s\n' "$EMPLOYEES_MYSQL_TARGET_DB" ;;
-    "$EMPLOYEES_DATASET:$POSTGRES_TARGET") printf '%s\n' "$EMPLOYEES_SOURCE_DB" ;;
-    "$EMPLOYEES_DATASET:$MONGO_TARGET") printf '%s\n' "$EMPLOYEES_SOURCE_DB" ;;
-    "$PAGILA_DATASET:$POSTGRES_TARGET") printf '%s\n' "$PAGILA_POSTGRES_TARGET_DB" ;;
-    "$PAGILA_DATASET:$MYSQL_TARGET") printf '%s\n' "$PAGILA_SOURCE_DB" ;;
-    "$PAGILA_DATASET:$MONGO_TARGET") printf '%s\n' "$PAGILA_SOURCE_DB" ;;
-    *) return 1 ;;
-  esac
+  resolved_target_database "$(source_engine "$1")" "$(source_database "$1")" "$2"
 }
 
 probe_table() {
   case "$1" in
     "$EMPLOYEES_DATASET") printf '%s\n' employees ;;
     "$PAGILA_DATASET") printf '%s\n' film ;;
+    "$SAMPLE_DATASET") printf '%s\n' movies ;;
     *) return 1 ;;
   esac
+}
+
+inspect_command() {
+  if [[ "$(source_engine "$1")" == "$MONGO_TARGET" ]]; then
+    printf 'inspect --sample-full\n'
+    return 0
+  fi
+  printf 'inspect\n'
+}
+
+plan_command() {
+  if [[ "$1" == "$PAGILA_DATASET" ]]; then
+    printf 'plan --target %s --cycle-mode %s\n' "$2" "$PAGILA_CYCLE_MODE"
+    return 0
+  fi
+  printf 'plan --target %s\n' "$2"
 }
 
 connection_url() {
@@ -126,6 +182,11 @@ piper_bin() {
     printf '%s\n' "$PIPER_BIN"
     return 0
   fi
+  local bundled="$ROOT/bin/piper"
+  if [[ -x "$bundled" ]]; then
+    printf '%s\n' "$bundled"
+    return 0
+  fi
   local sibling="$ROOT/../piper-go/piper"
   if [[ -x "$sibling" ]]; then
     printf '%s\n' "$sibling"
@@ -134,7 +195,7 @@ piper_bin() {
   local found
   found="$(command -v piper || true)"
   if [[ -z "$found" ]]; then
-    printf 'No piper binary. Set PIPER_BIN or build %s\n' "$sibling" >&2
+    printf 'No piper binary. Copy it to %s and chmod +x.\n' "$bundled" >&2
     return 1
   fi
   printf '%s\n' "$found"
@@ -189,22 +250,33 @@ drop_mongo_database() {
     "$1" --eval 'db.dropDatabase()'
 }
 
+drop_sample_sources() {
+  local database
+  while read -r database; do
+    drop_mongo_database "$database"
+  done < <(sample_databases)
+}
+
 clear_source() {
   local dataset="$1"
   case "$(source_engine "$dataset")" in
     "$MYSQL_TARGET") drop_mysql_database "$(source_database "$dataset")" ;;
     "$POSTGRES_TARGET") drop_postgres_database "$(source_database "$dataset")" ;;
+    "$MONGO_TARGET") drop_sample_sources ;;
+  esac
+}
+
+clear_named_target() {
+  case "$1" in
+    "$MYSQL_TARGET") recreate_mysql_database "$2" ;;
+    "$POSTGRES_TARGET") recreate_postgres_database "$2" ;;
+    "$MONGO_TARGET") drop_mongo_database "$2" ;;
+    *) return 1 ;;
   esac
 }
 
 clear_target() {
-  local database
-  database="$(target_database "$1" "$2")"
-  case "$2" in
-    "$MYSQL_TARGET") recreate_mysql_database "$database" ;;
-    "$POSTGRES_TARGET") recreate_postgres_database "$database" ;;
-    "$MONGO_TARGET") drop_mongo_database "$database" ;;
-  esac
+  clear_named_target "$2" "$(target_database "$1" "$2")"
 }
 
 count_table() {
@@ -244,6 +316,14 @@ expected_rows() {
         film "$PAGILA_FILM_ROWS" \
         rental "$PAGILA_RENTAL_ROWS" \
         payment "$PAGILA_PAYMENT_ROWS"
+      ;;
+    "$SAMPLE_DATASET")
+      printf '%s %s\n' \
+        comments "$SAMPLE_COMMENTS_ROWS" \
+        movies "$SAMPLE_MOVIES_ROWS" \
+        sessions "$SAMPLE_SESSIONS_ROWS" \
+        theaters "$SAMPLE_THEATERS_ROWS" \
+        users "$SAMPLE_USERS_ROWS"
       ;;
     *) return 1 ;;
   esac

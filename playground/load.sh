@@ -3,7 +3,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 usage() {
-  printf 'Usage: ./playground/load.sh <employees|pagila>\n' >&2
+  printf 'Usage: ./playground/load.sh <employees|pagila|sample>\n' >&2
 }
 
 load_employees() {
@@ -20,6 +20,13 @@ load_pagila() {
     -f /datasets/pagila/pagila-data.sql
 }
 
+load_sample() {
+  clear_source "$SAMPLE_DATASET"
+  compose exec -T mongo mongosh --quiet \
+    -u "$APP_USER" -p "$APP_PASSWORD" --authenticationDatabase "$MONGO_AUTH_DB" \
+    --file /datasets/import-sample.js
+}
+
 report_loaded() {
   local count
   count="$(count_table "$(source_engine "$1")" "$(source_database "$1")" "$(probe_table "$1")" | tail -n 1)"
@@ -33,6 +40,7 @@ main() {
   case "$1" in
     "$EMPLOYEES_DATASET") load_employees ;;
     "$PAGILA_DATASET") load_pagila ;;
+    "$SAMPLE_DATASET") load_sample ;;
   esac
   report_loaded "$1"
 }

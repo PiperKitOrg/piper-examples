@@ -3,16 +3,14 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 usage() {
-  printf 'Usage: ./playground/run.sh <employees|pagila> <mysql|postgres|mongo>\n' >&2
+  printf 'Usage: ./playground/run.sh <employees|pagila|sample> <mysql|postgres|mongo>\n' >&2
 }
 
-run_plan() {
-  local piper="$1" dataset="$2" target="$3"
-  if [[ "$dataset" == "$PAGILA_DATASET" ]]; then
-    "$piper" plan --target "$target" --cycle-mode "$PAGILA_CYCLE_MODE"
-    return 0
-  fi
-  "$piper" plan --target "$target"
+run_argv() {
+  local piper="$1" command_line="$2"
+  local args=()
+  read -r -a args <<< "$command_line"
+  "$piper" "${args[@]}"
 }
 
 prepare_cell() {
@@ -30,8 +28,8 @@ run_piper() {
     # shellcheck disable=SC1091
     source .env
     set +a
-    "$piper" inspect
-    run_plan "$piper" "$dataset" "$target"
+    run_argv "$piper" "$(inspect_command "$dataset")"
+    run_argv "$piper" "$(plan_command "$dataset" "$target")"
     "$piper" --yes execute
   )
 }
@@ -48,8 +46,7 @@ run_cell() {
 
 main() {
   [[ $# -eq 2 ]] || { usage; return 1; }
-  require_dataset "$1"
-  require_target "$2"
+  require_cross_dialect "$1" "$2"
   ensure_stack
   assert_source_loaded "$1"
   clear_target "$1" "$2"

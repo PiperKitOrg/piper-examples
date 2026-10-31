@@ -47,6 +47,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: piper
     volumes:
       - mongo_data:/data/db
+      - ./datasets/mongodb-sample-dataset:/datasets/mongodb-sample-dataset:ro
+      - ./playground/import-sample.js:/datasets/import-sample.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--username", "piper", "--password", "piper", "--authenticationDatabase", "admin", "--eval", "db.adminCommand({ ping: 1 })"]
       interval: 5s
