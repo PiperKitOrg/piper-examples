@@ -1,5 +1,5 @@
 const fileSystem = require("fs");
-const sampleRoot = "/datasets/mongodb-sample-dataset";
+const sampleRoot = "/datasets/mongodb";
 const insertBatchSize = 100;
 const jsonSuffix = ".json";
 

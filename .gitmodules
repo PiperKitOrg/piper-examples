@@ -1,9 +1,9 @@
-[submodule "datasets/pagila"]
-	path = datasets/pagila
+[submodule "datasets/postgres"]
+	path = datasets/postgres
 	url = https://github.com/devrimgunduz/pagila.git
-[submodule "datasets/test_db"]
-	path = datasets/test_db
+[submodule "datasets/mysql"]
+	path = datasets/mysql
 	url = https://github.com/datacharmer/test_db.git
-[submodule "datasets/mongodb-sample-dataset"]
-	path = datasets/mongodb-sample-dataset
+[submodule "datasets/mongodb"]
+	path = datasets/mongodb
 	url = https://github.com/neelabalan/mongodb-sample-dataset.git

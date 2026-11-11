@@ -9,15 +9,15 @@ usage() {
 load_employees() {
   clear_source "$EMPLOYEES_DATASET"
   compose exec -T mysql bash -lc \
-    "cd /datasets/test_db && mysql -uroot -p${MYSQL_ROOT_PASSWORD} < employees.sql"
+    "cd /datasets/mysql && mysql -uroot -p${MYSQL_ROOT_PASSWORD} < employees.sql"
 }
 
 load_pagila() {
   recreate_postgres_database "$PAGILA_SOURCE_DB"
   compose exec -T postgres psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PAGILA_SOURCE_DB" \
-    -f /datasets/pagila/pagila-schema.sql
+    -f /datasets/postgres/pagila-schema.sql
   compose exec -T postgres psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PAGILA_SOURCE_DB" \
-    -f /datasets/pagila/pagila-data.sql
+    -f /datasets/postgres/pagila-data.sql
 }
 
 load_sample() {

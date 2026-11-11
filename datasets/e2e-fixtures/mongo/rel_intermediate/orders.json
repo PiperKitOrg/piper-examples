@@ -1,4 +1,0 @@
-[
-  {"_id": 1, "customer_id": 1, "placed_at": {"$date": "2024-02-01T10:00:00.000Z"}},
-  {"_id": 2, "customer_id": 2, "placed_at": {"$date": "2024-03-01T11:00:00.000Z"}}
-]
