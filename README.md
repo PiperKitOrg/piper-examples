@@ -2,17 +2,37 @@
 
 A small local stack for trying Piper on three real datasets.
 
+**Clone the branch for your OS and CPU.** Each platform branch already includes the matching Piper binary in `bin/`. Sample datasets come in as git submodules.
+
+## Clone your platform
+
+| Platform | Branch | Clone |
+| -------- | ------ | ----- |
+| macOS Apple Silicon | `darwin-arm64` | `git clone --recurse-submodules -b darwin-arm64 https://github.com/PiperKitOrg/piper-examples.git` |
+| macOS Intel | `darwin-amd64` | `git clone --recurse-submodules -b darwin-amd64 https://github.com/PiperKitOrg/piper-examples.git` |
+| Linux x86_64 | `linux-amd64` | `git clone --recurse-submodules -b linux-amd64 https://github.com/PiperKitOrg/piper-examples.git` |
+| Linux ARM64 | `linux-arm64` | `git clone --recurse-submodules -b linux-arm64 https://github.com/PiperKitOrg/piper-examples.git` |
+| Windows x86_64 | `windows-amd64` | `git clone --recurse-submodules -b windows-amd64 https://github.com/PiperKitOrg/piper-examples.git` |
+| Windows ARM64 | `windows-arm64` | `git clone --recurse-submodules -b windows-arm64 https://github.com/PiperKitOrg/piper-examples.git` |
+
+`--recurse-submodules` pulls the Employees, Pagila, and Mongo sample datasets. If you forgot it:
+
+```bash
+git submodule update --init --recursive
+```
+
+`main` is the playground source without a pre-bundled binary. Prefer a platform branch above unless you are contributing.
+
 ## What's in this repo
 
 ```text
-piper-example/
-├── bin/                 # Put your Piper binary here (bin/piper)
-├── datasets/            # Sample databases for testing migrations
+piper-examples/
+├── bin/                 # Platform binary (bin/piper; also bin/piper.exe on Windows branches)
+├── datasets/            # Sample databases (git submodules)
 ├── docker-compose.yml   # Starts MySQL, PostgreSQL, and MongoDB locally
 ├── playground/          # Scripts to load sample data and reset databases
 └── runs/
     └── piper            # Shortcut to the Piper binary in bin/
-                         # Place the binary there before using it
 ```
 
 ## Datasets
@@ -27,11 +47,11 @@ With three databases, there are six possible migration directions. Same-dialect 
 
 ## Setup
 
-1. Review `docker-compose.yml` in the repo root. It's short, and you should always know what you're running.
-2. Put the Piper binary at `bin/piper` and make it executable (`chmod +x bin/piper`).
+1. Clone the branch for your platform (table above).
+2. Review `docker-compose.yml` in the repo root. It's short, and you should always know what you're running.
 3. Start the stack:
    ```bash
-    docker compose up -d
+   docker compose up -d
    ```
 
 ## Walkthrough: MySQL → PostgreSQL
@@ -45,7 +65,7 @@ You can try any of the six directions. This walkthrough migrates the **Employees
   xattr -d com.apple.quarantine bin/piper
   chmod +x bin/piper   # only if needed
   ```
-- **Windows:** if a security prompt appears, confirm that you want to run it.
+- **Windows:** if a security prompt appears, confirm that you want to run it. Use `bin\piper.exe` if needed.
 - **Linux:** nothing to do, though you may need `chmod +x bin/piper`.
 
 Then, from the repo root, check that it works:
