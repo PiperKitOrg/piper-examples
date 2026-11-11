@@ -1,4 +1,0 @@
-[
-  {"_id": 1, "sku": "SKU-1", "category_id": 3, "attrs": {"color": "blue"}, "price": 12.0},
-  {"_id": 2, "sku": "SKU-2", "category_id": 2, "attrs": {"pages": 200}, "price": 8.5}
-]

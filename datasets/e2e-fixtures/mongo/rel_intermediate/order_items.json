@@ -1,5 +1,0 @@
-[
-  {"_id": "1:1", "order_id": 1, "product_id": 1, "qty": 2},
-  {"_id": "1:2", "order_id": 1, "product_id": 2, "qty": 1},
-  {"_id": "2:2", "order_id": 2, "product_id": 2, "qty": 4}
-]
