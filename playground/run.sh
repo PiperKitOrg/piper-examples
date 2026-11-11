@@ -15,7 +15,7 @@ run_argv() {
 
 prepare_cell() {
   local dir="$1" source_url="$2" target_url="$3"
-  mkdir -p "$dir"
+  ensure_cell_piper "$dir"
   printf 'PIPER_SOURCE_URL=%s\nPIPER_TARGET_URL=%s\n' "$source_url" "$target_url" > "$dir/.env"
   rm -rf "$dir/.piper"
 }

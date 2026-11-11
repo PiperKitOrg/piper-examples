@@ -205,6 +205,15 @@ cell_dir() {
   printf '%s/runs/%s-to-%s\n' "$ROOT" "$1" "$2"
 }
 
+# Symlink ./piper -> ../piper so cell dirs can call the binary without ../../bin.
+ensure_cell_piper() {
+  local dir="$1"
+  local wrapper="$ROOT/runs/piper"
+  mkdir -p "$dir"
+  [[ -x "$wrapper" ]] || chmod +x "$wrapper"
+  ln -sfn ../piper "$dir/piper"
+}
+
 mysql_root() {
   compose exec -T mysql mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "$1"
 }

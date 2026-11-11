@@ -30,7 +30,7 @@ cell_label() {
 
 write_cell_env() {
   local dir="$1" source_url="$2" target_url="$3"
-  mkdir -p "$dir"
+  ensure_cell_piper "$dir"
   printf 'PIPER_SOURCE_URL=%s\nPIPER_TARGET_URL=%s\n' "$source_url" "$target_url" > "$dir/.env"
 }
 
@@ -55,9 +55,9 @@ rm -rf .piper
 set -a
 source .env
 set +a
-../../bin/piper $(inspect_command "$dataset")
-../../bin/piper $(plan_command "$dataset" "$target")
-../../bin/piper --yes execute
+./piper $(inspect_command "$dataset")
+./piper $(plan_command "$dataset" "$target")
+./piper --yes execute
 cd ../..
 EOF
 }

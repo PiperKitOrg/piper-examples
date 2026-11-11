@@ -174,7 +174,7 @@ print_fixture_commands() {
     return 1
   fi
   relative="runs/fixture-${id}-to-${target}"
-  mkdir -p "$ROOT/$relative"
+  ensure_cell_piper "$ROOT/$relative"
   printf 'PIPER_SOURCE_URL=%s\nPIPER_TARGET_URL=%s\n' \
     "$(connection_url "$dialect" "$db")" \
     "$(connection_url "$target" "$db")" >"$ROOT/$relative/.env"
@@ -192,9 +192,9 @@ rm -rf .piper
 set -a
 source .env
 set +a
-../../bin/piper ${inspect}
-../../bin/piper ${plan}
-../../bin/piper --yes execute
+./piper ${inspect}
+./piper ${plan}
+./piper --yes execute
 cd ../..
 EOF
   printf 'Wrote %s/.env\n' "$relative" >&2

@@ -121,11 +121,13 @@ rm -rf .piper
 set -a
 source .env
 set +a
-../../bin/piper inspect
-../../bin/piper plan --target postgres
-../../bin/piper --yes execute
+./piper inspect
+./piper plan --target postgres
+./piper --yes execute
 cd ../..
 ```
+
+Each cell gets a `./piper` symlink to `runs/piper`, which finds `bin/piper` for you.
 
 The `.env` in that directory looks like this:
 
@@ -237,6 +239,7 @@ datasets/pagila                   pagila dump
 datasets/mongodb-sample-dataset   MongoDB sample JSON
 datasets/e2e-fixtures             Piper e2e fixture pack + catalog.json
 playground/                       up, down, load, clear, run, commands, fixture, check, matrix
+runs/piper                        shortcut wrapper; cell dirs symlink ./piper here
 runs/                             one directory per cell
 docker-compose.yml                PostgreSQL 18 + pgvector, MySQL 8.4, MongoDB 7
 ```

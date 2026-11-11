@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Shortcut for the playground piper binary from any runs/<cell>/ directory.
+# Usage (from a cell dir): ./piper inspect
+set -euo pipefail
+
+resolve_script() {
+  local source="$1" dir
+  while [[ -L "$source" ]]; do
+    dir="$(cd "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    [[ "$source" != /* ]] && source="$dir/$source"
+  done
+  printf '%s\n' "$source"
+}
+
+SCRIPT="$(resolve_script "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SCRIPT")/.." && pwd)"
+BUNDLED="$ROOT/bin/piper"
+SIBLING="$ROOT/../piper-go/piper"
+
+if [[ -n "${PIPER_BIN:-}" ]]; then
+  [[ -x "$PIPER_BIN" ]] || {
+    printf 'PIPER_BIN is not executable: %s\n' "$PIPER_BIN" >&2
+    exit 1
+  }
+  exec "$PIPER_BIN" "$@"
+fi
+
+if [[ -x "$BUNDLED" ]]; then
+  exec "$BUNDLED" "$@"
+fi
+
+if [[ -x "$SIBLING" ]]; then
+  exec "$SIBLING" "$@"
+fi
+
+if command -v piper >/dev/null 2>&1; then
+  exec piper "$@"
+fi
+
+printf 'No piper binary. Copy it to %s and chmod +x.\n' "$BUNDLED" >&2
+exit 1
